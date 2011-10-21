@@ -1,0 +1,9 @@
+name: SprintWand
+main: org.hopto.seed419.SprintWand
+version: 1.0
+author: seed419
+commands:
+   sprint:
+     aliases: [sprint, sprintwand]
+   wtf:
+     description: I don't even...

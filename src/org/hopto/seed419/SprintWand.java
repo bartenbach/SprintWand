@@ -5,6 +5,8 @@
 package org.hopto.seed419;
 
 import java.io.File;
+import java.text.MessageFormat;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.bukkit.ChatColor;
@@ -29,18 +31,17 @@ public class SprintWand extends JavaPlugin{
     Methods m;
     public static PluginDescriptionFile pdf;
     public static boolean isEnabled = true;
-    public static boolean wtf = false;
+    public static HashMap MemoryWands = new HashMap();
     static final String pluginDir = "plugins/SprintWand/";
-    static final String tempDir = "plugins/SprintWand/Temp/";
-    static final String wandFile = "plugins/SprintWand/PlayerWands.txt";
-    static final String tempFile = "plugins/SprintWand/Temp/temp";
+    static final String wandFile = pluginDir + "PlayerWands.txt";
+    static final String tempFile = pluginDir + "temp.tmp";
     static File  playerWands = new File (wandFile);
-    static File config = new File(pluginDir + "config.txt");
+    //static File config = new File(pluginDir + "config.txt");
     public static final Logger log = Logger.getLogger("SprintWand");
     
     @Override
     public void onDisable() {
-        log.log(Level.INFO, pdf.getFullName() + " " + " Disabled");
+        log.log(Level.INFO, MessageFormat.format("{0} Disabled", pdf.getFullName()));
     }
 
     @Override
@@ -51,17 +52,19 @@ public class SprintWand extends JavaPlugin{
         pm.registerEvent(Type.PLAYER_INTERACT, listener, Priority.Low, this);
         m = new Methods();
         new File(pluginDir).mkdir();
-        new File(tempDir).mkdir();
+        //new File(tempDir).mkdir();
         if(!playerWands.exists()){
             try{
                 playerWands.createNewFile();
-                log.log(Level.INFO, pdf.getName() + " PlayerWands file created.");
+                log.log(Level.INFO, MessageFormat.format("{0} empty PlayerWands file created.", pdf.getName()));
             }catch(Exception ex){
                 log.log(Level.SEVERE, pdf.getName() + " unable to create PlayerWands file", ex);
             }
         }
         Settings.loadConfiguration();
-        log.log(Level.INFO, pdf.getFullName() + " Enabled.  Current Global Wand: " + Material.getMaterial(Settings.WandItem));
+        m.writeWandsToMemory();
+        log.log(Level.INFO, pdf.getName() + " loaded " + Methods.lines + " player wands into memory.");
+        log.log(Level.INFO, pdf.getFullName() + " Loaded.  Current Global Wand: " + Material.getMaterial(Settings.WandItem));
     }
 
     @Override
@@ -80,7 +83,7 @@ public class SprintWand extends JavaPlugin{
                 log.log(Level.INFO, "You must be a player to sprint :)");   
                 return false;
                 }
-        }else if(label.equalsIgnoreCase("setwand")){
+        }else if(label.equalsIgnoreCase("setwandto")){
             if(sender instanceof Player){
                 if(sender.hasPermission("SprintWand.wand")){
                     Player player = (Player) sender;
@@ -88,11 +91,13 @@ public class SprintWand extends JavaPlugin{
                             Methods.removeOldWand(player);
                             int wand = m.parseArgs(args, player);
                             m.writeWandToFile(wand, player);
+                            m.changeWandInMemory(player, wand);
                             player.sendMessage(ChatColor.GOLD + "SprintWand Changed to " + ChatColor.DARK_AQUA + Material.getMaterial(wand).name());
                             return true;                            
                         }else{     
                             int wand = m.parseArgs(args, player);
                             m.writeWandToFile(wand, player);
+                            m.changeWandInMemory(player, wand);
                             player.sendMessage(ChatColor.GOLD + "SprintWand Changed to " + ChatColor.DARK_AQUA + Material.getMaterial(wand).name());
                             return true;
                         }
@@ -108,7 +113,12 @@ public class SprintWand extends JavaPlugin{
             if(sender instanceof Player){
                 if(sender.hasPermission("SprintWand.wand")){
                     Player player = (Player) sender;
-                    player.sendMessage(ChatColor.GOLD + "Current wand: " + ChatColor.DARK_AQUA + Material.getMaterial(Methods.getPlayerWand(player)));
+                    if(MemoryWands.get(player.getName()) != null){
+                        Material.getMaterial(Integer.parseInt(MemoryWands.get(player.getName()).toString()));
+                    player.sendMessage(ChatColor.GOLD + "Current wand: " + ChatColor.DARK_AQUA + Material.getMaterial(Integer.parseInt(MemoryWands.get(player.getName()).toString())));
+                    }else{
+                       player.sendMessage(ChatColor.GOLD + "Current wand: " + ChatColor.DARK_AQUA + Material.getMaterial(Settings.WandItem));
+                    }
                     return true;
                 }else{
                      sender.sendMessage("You need the permission SprintWand.wand");
@@ -117,6 +127,17 @@ public class SprintWand extends JavaPlugin{
             }else{
                 log.log(Level.INFO, "You must be a player to sprint :)");
                 return false;                
+            }
+        }else if(label.equalsIgnoreCase("setwand")){
+            if(sender instanceof Player){
+                if(sender.hasPermission("SprintWand.wand")){
+                    Player player = (Player) sender;
+                    int currentItem = m.getCurrentItem(player);
+                    m.changeWandInMemory(player, currentItem);
+                    player.sendMessage(ChatColor.GOLD + "SprintWand Changed to " + ChatColor.DARK_AQUA + Material.getMaterial(currentItem).name());
+                    Methods.removeOldWand(player);
+                    m.writeWandToFile(currentItem, player);
+                }
             }
         }
         return false;

@@ -19,12 +19,12 @@ import java.util.logging.Logger;
 public class ConfigurationFile extends Properties {
     static int WandItem;
     private String fileName;
-    private Properties properties;
+    //private Properties properties;
     private static final Logger log = Logger.getLogger("SprintWand");
     
     public ConfigurationFile(String fileName){
         this.fileName = fileName;
-        this.properties = new Properties();
+   //     this.properties = new Properties();
     }
 
     public void load(){
@@ -47,20 +47,10 @@ public class ConfigurationFile extends Properties {
         }   
     }
     
-    public void save(){
-        try{
-            FileOutputStream output = new FileOutputStream(fileName);
-            this.properties.store(output, fileName);
-            output.close();
-        }catch(IOException ex){
-            log.log(Level.SEVERE, "Unable to save " + this.fileName + "!", ex);
-        }
-    }
-    
-    public void save(String start){
+    public void save(String desc){
         try{
             FileOutputStream output = new FileOutputStream(this.fileName);
-            store(output, start);
+            store(output, desc);
             output.close();
         }catch(IOException ex){
             log.log(Level.SEVERE, "Unable to save " + this.fileName + "!", ex);

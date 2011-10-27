@@ -5,7 +5,9 @@ author: seed419
 commands:
    sprint:
      description: Enables or disables SprintWand
-   setwand:
+   setwandto:
      description: Sets the SprintWand to a new item  Parameters- New items ID
    wand:
      aliases: Prints the current SprintWand item to the user
+   setwand:
+     aliases: Sets the SprintWand to the item the player is holding

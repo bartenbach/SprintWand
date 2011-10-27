@@ -27,6 +27,7 @@ import org.bukkit.entity.Player;
 public class Methods {
     
            public static final Logger log = Logger.getLogger("SprintWand");
+           public static int lines;
            
     public void toggleSprint(Player player){
         
@@ -63,7 +64,7 @@ public class Methods {
             }
         }
     
-    public static int getPlayerWand(Player player){
+    public static int getPlayerWandFromFile(Player player){
         int wandItem = Settings.WandItem;
         try{
             FileInputStream fs = new FileInputStream(SprintWand.wandFile);
@@ -162,5 +163,55 @@ public class Methods {
             }catch(IOException ex){
                 SprintWand.log.log(Level.SEVERE, SprintWand.pdf.getName() + " has encountered an IO Exception", ex);   
             }
-         }  
-      }
+         }
+
+    void writeWandsToMemory() {
+        try{
+            FileInputStream fs = new FileInputStream(SprintWand.playerWands);
+            DataInputStream ds = new DataInputStream(fs);
+            BufferedReader bf = new BufferedReader(new InputStreamReader(ds));
+            String strLine;
+            while((strLine = bf.readLine()) != null){
+                String[] fileLine = strLine.split(":");
+                if(fileLine.length == 2){
+                    lines++;
+                    String name = fileLine[0];
+                    int itemID = Integer.parseInt(fileLine[1]);
+                    SprintWand.MemoryWands.put(name, itemID);
+                }
+            }
+                ds.close();
+                ds = null;
+                fs.close();
+                fs = null;
+                bf.close();
+                bf = null;
+                System.gc();
+        }catch(Exception ex){
+            SprintWand.log.log(Level.SEVERE, SprintWand.pdf.getName() + " encountered an error reading PlayerWands.txt", ex);
+        }    }
+
+    int getCurrentItem(Player player) {
+        int currentItem = player.getItemInHand().getTypeId();
+        return currentItem;
+    }
+    
+    int getWandFromMemory(Player player){
+        String name = player.getName();
+        if(SprintWand.MemoryWands.containsKey(name)){
+            String wand = SprintWand.MemoryWands.get(name).toString();
+            int item = Integer.parseInt(wand);
+            return item;
+        }
+        return Settings.WandItem;
+    }
+
+    void changeWandInMemory(Player player, int item) {
+        String name = player.getName();
+        if(SprintWand.MemoryWands.containsKey(name)){
+            SprintWand.MemoryWands.remove(name);
+        }
+        SprintWand.MemoryWands.put(name, item);
+    }
+    
+  }

@@ -14,8 +14,6 @@ import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event.Priority;
-import org.bukkit.event.Event.Type;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -26,18 +24,18 @@ import org.bukkit.plugin.java.JavaPlugin;
  */
 public class SprintWand extends JavaPlugin{
     
-    PluginManager pm;
-    Listener listener;
-    Methods m;
-    public static PluginDescriptionFile pdf;
-    public static boolean isEnabled = true;
-    public static HashMap MemoryWands = new HashMap();
-    static final String pluginDir = "plugins/SprintWand/";
-    static final String wandFile = pluginDir + "PlayerWands.txt";
-    static final String tempFile = pluginDir + "temp.tmp";
-    static File  playerWands = new File (wandFile);
-    //static File config = new File(pluginDir + "config.txt");
-    public static final Logger log = Logger.getLogger("SprintWand");
+    private PluginManager pm;
+    private WandListener listener;
+    private Methods m;
+    private static PluginDescriptionFile pdf;
+    private  boolean enabled = true;
+    private HashMap<String, Integer> MemoryWands = new HashMap<String, Integer>();
+    private final String pluginDir = "plugins/SprintWand/";
+    private final String wandFilePath = pluginDir + "PlayerWands.txt";
+    private final String tempFilePath = pluginDir + "temp.tmp";
+    private File  playerWandsFile = new File (wandFilePath);
+    private static final Logger log = Logger.getLogger("SprintWand");
+    private Settings settings;
     
     @Override
     public void onDisable() {
@@ -46,101 +44,126 @@ public class SprintWand extends JavaPlugin{
 
     @Override
     public void onEnable() {
+        settings = new Settings(this);
+        listener = new WandListener(this, settings);
+        m = new Methods(this, settings);        
         pdf = getDescription();
-        listener = new Listener();
         pm = this.getServer().getPluginManager();
-        pm.registerEvent(Type.PLAYER_INTERACT, listener, Priority.Low, this);
-        m = new Methods();
+        pm.registerEvents(listener, this);
         new File(pluginDir).mkdir();
-        //new File(tempDir).mkdir();
-        if(!playerWands.exists()){
-            try{
-                playerWands.createNewFile();
+        
+        if (!playerWandsFile.exists()) {
+            try {
+                playerWandsFile.createNewFile();
                 log.log(Level.INFO, MessageFormat.format("{0} empty PlayerWands file created.", pdf.getName()));
-            }catch(Exception ex){
+            } catch(Exception ex) {
                 log.log(Level.SEVERE, pdf.getName() + " unable to create PlayerWands file", ex);
             }
         }
-        Settings.loadConfiguration();
+        settings.loadConfiguration();
         m.writeWandsToMemory();
-        log.log(Level.INFO, pdf.getName() + " loaded " + Methods.lines + " player wands into memory.");
-        log.log(Level.INFO, pdf.getFullName() + " Loaded.  Current Global Wand: " + Material.getMaterial(Settings.WandItem));
+        log.log(Level.INFO, pdf.getName() + " loaded " + m.getLines() + " player wands into memory.");
+        log.log(Level.INFO, pdf.getFullName() + " Loaded.  Current Global Wand: " + Material.getMaterial(settings.getWandItem()));
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if(label.equalsIgnoreCase("sprint")){
-           if(sender instanceof Player){
-                if(sender.hasPermission("SprintWand.wand")){
+        if (label.equalsIgnoreCase("sprint")) {
+           if (sender instanceof Player) {
+                if (sender.hasPermission("SprintWand.wand")) {
                     Player player = (Player) sender;
                     m.toggleSprint(player);
                     return true;
-                }else{
+                } else {
                     sender.sendMessage("You need the permission SprintWand.wand");
                     return false;  
                     }
-           }else{
+           } else {
                 log.log(Level.INFO, "You must be a player to sprint :)");   
                 return false;
                 }
-        }else if(label.equalsIgnoreCase("setwandto")){
-            if(sender instanceof Player){
-                if(sender.hasPermission("SprintWand.wand")){
+        } else if (label.equalsIgnoreCase("setwandto")) {
+            if (sender instanceof Player) {
+                if (sender.hasPermission("SprintWand.wand")) {
                     Player player = (Player) sender;
-                        if(Methods.playerAlreadyInFile(player)){
-                            Methods.removeOldWand(player);
+                        if (m.playerAlreadyInFile(player)) {
+                            m.removeOldWand(player);
                             int wand = m.parseArgs(args, player);
                             m.writeWandToFile(wand, player);
                             m.changeWandInMemory(player, wand);
                             player.sendMessage(ChatColor.GOLD + "SprintWand Changed to " + ChatColor.DARK_AQUA + Material.getMaterial(wand).name());
                             return true;                            
-                        }else{     
+                        } else {     
                             int wand = m.parseArgs(args, player);
                             m.writeWandToFile(wand, player);
                             m.changeWandInMemory(player, wand);
                             player.sendMessage(ChatColor.GOLD + "SprintWand Changed to " + ChatColor.DARK_AQUA + Material.getMaterial(wand).name());
                             return true;
                         }
-                }else{
+                } else {
                     sender.sendMessage("You need the permission SprintWand.wand");
                     return false;
                 }
-            }else{
+            } else {
                 log.log(Level.INFO, "You must be a player to sprint :)");
                 return false;
             }
-        }else if(label.equalsIgnoreCase("wand")){
-            if(sender instanceof Player){
-                if(sender.hasPermission("SprintWand.wand")){
+        } else if (label.equalsIgnoreCase("wand")) { 
+            if (sender instanceof Player) {
+                if (sender.hasPermission("SprintWand.wand")) {
                     Player player = (Player) sender;
-                    if(MemoryWands.get(player.getName()) != null){
+                    if (MemoryWands.get(player.getName()) != null) {
                         Material.getMaterial(Integer.parseInt(MemoryWands.get(player.getName()).toString()));
                     player.sendMessage(ChatColor.GOLD + "Current wand: " + ChatColor.DARK_AQUA + Material.getMaterial(Integer.parseInt(MemoryWands.get(player.getName()).toString())));
-                    }else{
-                       player.sendMessage(ChatColor.GOLD + "Current wand: " + ChatColor.DARK_AQUA + Material.getMaterial(Settings.WandItem));
+                    } else {
+                       player.sendMessage(ChatColor.GOLD + "Current wand: " + ChatColor.DARK_AQUA + Material.getMaterial(settings.getWandItem()));
                     }
                     return true;
-                }else{
+                } else {
                      sender.sendMessage("You need the permission SprintWand.wand");
                      return false;
                 }
-            }else{
+            } else {
                 log.log(Level.INFO, "You must be a player to sprint :)");
                 return false;                
             }
-        }else if(label.equalsIgnoreCase("setwand")){
-            if(sender instanceof Player){
-                if(sender.hasPermission("SprintWand.wand")){
+        } else if (label.equalsIgnoreCase("setwand")) {
+            if (sender instanceof Player) {
+                if (sender.hasPermission("SprintWand.wand")) {
                     Player player = (Player) sender;
                     int currentItem = m.getCurrentItem(player);
                     m.changeWandInMemory(player, currentItem);
                     player.sendMessage(ChatColor.GOLD + "SprintWand Changed to " + ChatColor.DARK_AQUA + Material.getMaterial(currentItem).name());
-                    Methods.removeOldWand(player);
+                    m.removeOldWand(player);
                     m.writeWandToFile(currentItem, player);
                 }
             }
         }
         return false;
      }
+    
+    public boolean enabled() {
+        return enabled;
+    }
+    
+    public void setEnable(boolean b) {
+        enabled = b;
+    }
+    
+    public PluginDescriptionFile getPdf() {
+        return pdf;
+    }
+    
+    public File getPlayerWandsFile() {
+        return playerWandsFile;
+    }
+    
+    public HashMap<String,Integer> getMemoryWands() {
+        return MemoryWands;
+    }
+    
+    public String getWandFilePath() {
+        return wandFilePath;
+    }
 }
 

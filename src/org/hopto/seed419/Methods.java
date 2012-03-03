@@ -4,17 +4,7 @@
  */
 package org.hopto.seed419;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.bukkit.ChatColor;
@@ -26,17 +16,26 @@ import org.bukkit.entity.Player;
  */
 public class Methods {
     
-           public static final Logger log = Logger.getLogger("SprintWand");
-           public static int lines;
+    
+    private static final Logger log = Logger.getLogger("SprintWand");
+    private int lines;
+    private SprintWand sw;
+    private Settings settings;
+    
+           
+    public Methods(SprintWand sw, Settings settings) {
+        this.sw = sw;
+        this.settings = settings;
+    }
            
     public void toggleSprint(Player player){
         
-        if(SprintWand.isEnabled == false){
-           SprintWand.isEnabled = true;
-           player.sendMessage(ChatColor.GOLD + SprintWand.pdf.getName() + " Enabled");
-        }else{
-           SprintWand.isEnabled = false;
-           player.sendMessage(ChatColor.GOLD + SprintWand.pdf.getName() + " Disabled");
+        if (sw.enabled() == false) {
+           sw.setEnable(true);
+           player.sendMessage(ChatColor.GOLD + sw.getPdf().getName() + " Enabled");
+        } else {
+           sw.setEnable(false);
+           player.sendMessage(ChatColor.GOLD + sw.getPdf().getName() + " Disabled");
         }
     }
     
@@ -46,13 +45,13 @@ public class Methods {
             return wand;
         }else{
             player.sendMessage("Invalid Item Id.  SprintWand defaulted to stick.");
-            return Settings.WandItem;
+            return settings.getWandItem();
         }
     }
 
-    void writeWandToFile(int wand, Player player) {
+    public void writeWandToFile(int wand, Player player) {
         try{
-        BufferedWriter bf = new BufferedWriter(new FileWriter(SprintWand.playerWands, true));
+        BufferedWriter bf = new BufferedWriter(new FileWriter(sw.getPlayerWandsFile(), true));
         bf.write(player.getName() + ":" + wand);
         bf.newLine();
         bf.close();
@@ -60,19 +59,19 @@ public class Methods {
         System.gc(); 
             }catch(Exception ex){
                 player.sendMessage("Unable to write wand to file");
-                SprintWand.log.log(Level.SEVERE, SprintWand.pdf.getName() + " unable to write wand to file!");
+                log.log(Level.SEVERE, sw.getPdf().getName() + " unable to write wand to file!");
             }
         }
     
-    public static int getPlayerWandFromFile(Player player){
-        int wandItem = Settings.WandItem;
-        try{
-            FileInputStream fs = new FileInputStream(SprintWand.wandFile);
+    public int getPlayerWandFromFile(Player player) {
+        int wandItem = settings.getWandItem();
+        try {
+            FileInputStream fs = new FileInputStream(sw.getPlayerWandsFile());
             DataInputStream ds = new DataInputStream(fs);
             BufferedReader bf = new BufferedReader(new InputStreamReader(ds));
             String name = player.getName();
             String strLine;
-            while ((strLine = bf.readLine()) != null){
+            while ((strLine = bf.readLine()) != null) {
                     if (strLine.startsWith(name)){
                         String[] fileLine = strLine.split(":");
                         int counter = 0;
@@ -92,18 +91,18 @@ public class Methods {
                 bf = null;
                 System.gc();
             return wandItem;
-            }catch(Exception ex){
-            SprintWand.log.log(Level.SEVERE, SprintWand.pdf.getName() + " unable to read wands from file!", ex);
+        } catch(Exception ex) {
+            log.log(Level.SEVERE, sw.getPdf().getName() + " unable to read wands from file!", ex);
             player.sendMessage(ChatColor.GOLD + "Unable to read your wand from file :(");
-            player.sendMessage(ChatColor.GOLD + "Your wand has been defaulted to the global wand: " + Material.getMaterial(Settings.WandItem));
-            return Settings.WandItem;
+            player.sendMessage(ChatColor.GOLD + "Your wand has been defaulted to the global wand: " + Material.getMaterial(settings.getWandItem()));
+            return settings.getWandItem();
         }
 
     }
     
-    public static boolean playerAlreadyInFile(Player player){
-        try{
-            FileInputStream fs = new FileInputStream(SprintWand.playerWands);
+    public boolean playerAlreadyInFile(Player player) {
+        try {
+            FileInputStream fs = new FileInputStream(sw.getPlayerWandsFile());
             DataInputStream ds = new DataInputStream(fs);
             BufferedReader bf = new BufferedReader(new InputStreamReader(ds));
             String name = player.getName();
@@ -122,24 +121,24 @@ public class Methods {
                 System.gc();
             return false;
         }catch(Exception ex){
-            SprintWand.log.log(Level.SEVERE, SprintWand.pdf.getName() + " encountered an error reading PlayerWands.txt", ex);
+            log.log(Level.SEVERE, sw.getPdf().getName() + " encountered an error reading PlayerWands.txt", ex);
         }
        return false;
     }
     
-    static void removeOldWand(Player player) {
+    public void removeOldWand(Player player) {
         String name = player.getName(); 
-        try{
-            File inFile = new File(SprintWand.wandFile);
-            if(!inFile.isFile()){
-            SprintWand.log.log(Level.SEVERE, SprintWand.pdf.getName() + " cannot locate " + inFile.getName());
+        try {
+            File inFile = sw.getPlayerWandsFile();
+            if (!inFile.isFile()) {
+                log.log(Level.SEVERE, sw.getPdf().getName() + " cannot locate " + inFile.getName());
             return;
             }
              File tempFile = new File(inFile.getAbsolutePath() + ".tmp");
              BufferedReader br = new BufferedReader(new FileReader(inFile));
              PrintWriter pw = new PrintWriter(new FileWriter(tempFile));
              String currentLine = null;
-                  while ((currentLine = br.readLine()) != null){
+                  while ((currentLine = br.readLine()) != null) {
                       String trimmedLine = currentLine.trim();
                       if (!trimmedLine.startsWith(name)) {
                           pw.println(trimmedLine);
@@ -152,22 +151,22 @@ public class Methods {
                       br.close();
                       br = null;
                       System.gc();
-                      if(!inFile.delete()){
-                          SprintWand.log.log(Level.SEVERE, "Could not delete file!");
+                      if(!inFile.delete()) {
+                          log.log(Level.SEVERE, "Could not delete file!");
                       }
-                      if(!tempFile.renameTo(inFile)){
-                          SprintWand.log.log(Level.SEVERE, "Could not rename file!");
+                      if(!tempFile.renameTo(inFile)) {
+                          log.log(Level.SEVERE, "Could not rename file!");
                       }
-            }catch (FileNotFoundException ex){
-                SprintWand.log.log(Level.SEVERE, SprintWand.pdf.getName() + " is unable to find file!", ex);
-            }catch(IOException ex){
-                SprintWand.log.log(Level.SEVERE, SprintWand.pdf.getName() + " has encountered an IO Exception", ex);   
+            } catch (FileNotFoundException ex) {
+                log.log(Level.SEVERE, sw.getPdf().getName() + " is unable to find file!", ex);
+            } catch(IOException ex) {
+                log.log(Level.SEVERE, sw.getPdf().getName() + " has encountered an IO Exception", ex);   
             }
          }
 
-    void writeWandsToMemory() {
+    public void writeWandsToMemory() {
         try{
-            FileInputStream fs = new FileInputStream(SprintWand.playerWands);
+            FileInputStream fs = new FileInputStream(sw.getPlayerWandsFile());
             DataInputStream ds = new DataInputStream(fs);
             BufferedReader bf = new BufferedReader(new InputStreamReader(ds));
             String strLine;
@@ -177,7 +176,7 @@ public class Methods {
                     lines++;
                     String name = fileLine[0];
                     int itemID = Integer.parseInt(fileLine[1]);
-                    SprintWand.MemoryWands.put(name, itemID);
+                    sw.getMemoryWands().put(name, itemID);
                 }
             }
                 ds.close();
@@ -187,31 +186,36 @@ public class Methods {
                 bf.close();
                 bf = null;
                 System.gc();
-        }catch(Exception ex){
-            SprintWand.log.log(Level.SEVERE, SprintWand.pdf.getName() + " encountered an error reading PlayerWands.txt", ex);
-        }    }
+        } catch(Exception ex) {
+            log.log(Level.SEVERE, sw.getPdf().getName() + " encountered an error reading PlayerWands.txt", ex);
+        }  
+    }
 
-    int getCurrentItem(Player player) {
+    public int getCurrentItem(Player player) {
         int currentItem = player.getItemInHand().getTypeId();
         return currentItem;
     }
     
-    int getWandFromMemory(Player player){
+    public int getWandFromMemory(Player player){
         String name = player.getName();
-        if(SprintWand.MemoryWands.containsKey(name)){
-            String wand = SprintWand.MemoryWands.get(name).toString();
+        if (sw.getMemoryWands().containsKey(name)) {
+            String wand = sw.getMemoryWands().get(name).toString();
             int item = Integer.parseInt(wand);
             return item;
         }
-        return Settings.WandItem;
+        return settings.getWandItem();
     }
 
-    void changeWandInMemory(Player player, int item) {
+    public void changeWandInMemory(Player player, int item) {
         String name = player.getName();
-        if(SprintWand.MemoryWands.containsKey(name)){
-            SprintWand.MemoryWands.remove(name);
+        if(sw.getMemoryWands().containsKey(name)){
+            sw.getMemoryWands().remove(name);
         }
-        SprintWand.MemoryWands.put(name, item);
+        sw.getMemoryWands().put(name, item);
+    }
+    
+    public int getLines() {
+        return lines;
     }
     
   }

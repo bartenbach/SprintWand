@@ -17,17 +17,19 @@ import java.util.logging.Logger;
  * @author SeeD419
  */
 public class ConfigurationFile extends Properties {
-    static int WandItem;
+    
+    
+    private int WandItem;
+    private static final long serialVersionUID = 1L;
     private String fileName;
-    //private Properties properties;
     private static final Logger log = Logger.getLogger("SprintWand");
     
-    public ConfigurationFile(String fileName){
+    
+    public ConfigurationFile(String fileName) {
         this.fileName = fileName;
-   //     this.properties = new Properties();
     }
 
-    public void load(){
+    public void load() {
         File file = new File(this.fileName);
         if(file.exists()){
             try{
@@ -38,7 +40,7 @@ public class ConfigurationFile extends Properties {
         }
     }
     
-    public int getInt(String key, int value){
+    public int getInt(String key, int value) {
         if(containsKey(key)){
            return Integer.parseInt(getProperty(key));
         }else{
@@ -47,7 +49,7 @@ public class ConfigurationFile extends Properties {
         }   
     }
     
-    public void save(String desc){
+    public void save(String desc) {
         try{
             FileOutputStream output = new FileOutputStream(this.fileName);
             store(output, desc);
@@ -56,7 +58,4 @@ public class ConfigurationFile extends Properties {
             log.log(Level.SEVERE, "Unable to save " + this.fileName + "!", ex);
         }
     }
-    
-    
-    
 }

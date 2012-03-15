@@ -15,30 +15,19 @@ import org.bukkit.entity.Player;
  * @author SeeD419
  */
 public class Methods {
-    
-    
+
+
     private static final Logger log = Logger.getLogger("SprintWand");
     private int lines;
     private SprintWand sw;
     private Settings settings;
-    
-           
+
+
     public Methods(SprintWand sw, Settings settings) {
         this.sw = sw;
         this.settings = settings;
     }
-           
-    public void toggleSprint(Player player){
-        
-        if (sw.enabled() == false) {
-           sw.setEnable(true);
-           player.sendMessage(ChatColor.GOLD + sw.getPdf().getName() + " Enabled");
-        } else {
-           sw.setEnable(false);
-           player.sendMessage(ChatColor.GOLD + sw.getPdf().getName() + " Disabled");
-        }
-    }
-    
+
     public int parseArgs(String[] args, Player player){
         int wand = Integer.parseInt(args[0]);
         if(wand >= 0 && wand <= 2267){
@@ -56,13 +45,13 @@ public class Methods {
         bf.newLine();
         bf.close();
         bf = null;
-        System.gc(); 
+        System.gc();
             }catch(Exception ex){
                 player.sendMessage("Unable to write wand to file");
                 log.log(Level.SEVERE, sw.getPdf().getName() + " unable to write wand to file!");
             }
         }
-    
+
     public int getPlayerWandFromFile(Player player) {
         int wandItem = settings.getWandItem();
         try {
@@ -99,7 +88,7 @@ public class Methods {
         }
 
     }
-    
+
     public boolean playerAlreadyInFile(Player player) {
         try {
             FileInputStream fs = new FileInputStream(sw.getPlayerWandsFile());
@@ -125,9 +114,9 @@ public class Methods {
         }
        return false;
     }
-    
+
     public void removeOldWand(Player player) {
-        String name = player.getName(); 
+        String name = player.getName();
         try {
             File inFile = sw.getPlayerWandsFile();
             if (!inFile.isFile()) {
@@ -142,7 +131,7 @@ public class Methods {
                       String trimmedLine = currentLine.trim();
                       if (!trimmedLine.startsWith(name)) {
                           pw.println(trimmedLine);
-                          pw.flush();    
+                          pw.flush();
                           }
                       }
                       pw.close();
@@ -160,7 +149,7 @@ public class Methods {
             } catch (FileNotFoundException ex) {
                 log.log(Level.SEVERE, sw.getPdf().getName() + " is unable to find file!", ex);
             } catch(IOException ex) {
-                log.log(Level.SEVERE, sw.getPdf().getName() + " has encountered an IO Exception", ex);   
+                log.log(Level.SEVERE, sw.getPdf().getName() + " has encountered an IO Exception", ex);
             }
          }
 
@@ -188,14 +177,14 @@ public class Methods {
                 System.gc();
         } catch(Exception ex) {
             log.log(Level.SEVERE, sw.getPdf().getName() + " encountered an error reading PlayerWands.txt", ex);
-        }  
+        }
     }
 
     public int getCurrentItem(Player player) {
         int currentItem = player.getItemInHand().getTypeId();
         return currentItem;
     }
-    
+
     public int getWandFromMemory(Player player){
         String name = player.getName();
         if (sw.getMemoryWands().containsKey(name)) {
@@ -213,9 +202,9 @@ public class Methods {
         }
         sw.getMemoryWands().put(name, item);
     }
-    
+
     public int getLines() {
         return lines;
     }
-    
+
   }

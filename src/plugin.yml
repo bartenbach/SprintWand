@@ -1,6 +1,6 @@
 name: SprintWand
 main: org.hopto.seed419.SprintWand
-version: 1.4
+version: 1.5
 author: seed419
 commands:
    sw:

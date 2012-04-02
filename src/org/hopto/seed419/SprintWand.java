@@ -15,8 +15,31 @@ import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-//TODO Fix fall damage issue.
 //TODO Write wand maps to file.
+
+/*  Attribute Only (Public) License
+        Version 0.a3, July 11, 2011
+
+    Copyright (C) 2012 Blake Bartenbach <seed419@gmail.com> (@seed419)
+
+    Anyone is allowed to copy and distribute verbatim or modified
+    copies of this license document and altering is allowed as long
+    as you attribute the author(s) of this license document / files.
+
+    ATTRIBUTE ONLY PUBLIC LICENSE
+    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+
+      1. Attribute anyone attached to the license document.
+         * Do not remove pre-existing attributes.
+
+         Plausible attribution methods:
+            1. Through comment blocks.
+            2. Referencing on a site, wiki, or about page.
+
+      2. Do whatever you want as long as you don't invalidate 1.
+
+
+@license AOL v.a3 <http://aol.nexua.org>*/
 
 public class SprintWand extends JavaPlugin {
 
@@ -140,7 +163,7 @@ public class SprintWand extends JavaPlugin {
                         return true;
                     } else if (args[1].equalsIgnoreCase("help")) {
                         player.sendMessage(this.prefix + "Usage: /sw mode [arg]");
-                        player.sendMessage(ChatColor.GOLD + "{-high|-higher|-fast|-sprint|-suicide|-faster}");
+                        player.sendMessage(ChatColor.GOLD + "{high|higher|fast|sprint|suicide|faster}");
                         return true;
                     } else if (args[1].equalsIgnoreCase("high")) {
                         boolean success = setWand(player, "high");

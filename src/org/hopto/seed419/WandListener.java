@@ -53,7 +53,8 @@ public class WandListener implements Listener {
                                 sw.addNoFallDamage(player);
                             } else if (sw.getMemoryWands().get(player.getName()).get(item).equalsIgnoreCase("suicide")) {
                                 Vector dir = player.getLocation().getDirection();
-                                Vector newv = new Vector(dir.getX() * 50, dir.getY() + 10000, dir.getZ() * 50);
+                                Vector newv = new Vector(dir.getX() * 50, dir.getY() + 200, dir.getZ() * 50);
+                                player.setVelocity(newv);
                                 sw.addNoFallDamage(player);
                             } else if (sw.getMemoryWands().get(player.getName()).get(item).equalsIgnoreCase("high")) {
                                 Vector dir = player.getLocation().getDirection();

@@ -4,5 +4,6 @@ version: 1.5
 author: seed419
 commands:
    sw:
-     description: Shows the main menu for SprintWand
+     aliases: SprintWand
+     description: Lets a player use SprintWands
 
